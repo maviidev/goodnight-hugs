@@ -1,24 +1,23 @@
-# Goodnight Hugs
+# XC — Avaliação Física e Nutricional
 
-boa noite
+Aplicação web mobile-first para o aluno preencher uma avaliação física e nutricional guiada em 10 etapas.
 
-This project was built with [Lovable](https://lovable.dev).
+## Executar localmente
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/dc4bc65c-3716-485a-b0e3-ea3bab93464b).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+```bash
+npm install
 npm run dev
 ```
+
+## Recursos
+
+- 36 perguntas organizadas por etapas configuráveis em `src/questions.ts`
+- progresso visual e validação por etapa
+- salvamento automático do rascunho no navegador
+- upload e pré-visualização de fotos de frente, lado e costas
+- layout responsivo alinhado à identidade visual XC
+- confirmação de envio e persistência local da submissão
+
+## Persistência
+
+Esta primeira versão funciona sem credenciais externas e mantém rascunhos e submissões no `localStorage`. Para uso em produção com consulta pelo treinador e armazenamento real das imagens, conecte `src/storage.ts` ao banco e ao storage do projeto (por exemplo, Supabase).
