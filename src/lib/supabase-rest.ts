@@ -1,3 +1,5 @@
+import { SUPABASE_PROJECT_URL, SUPABASE_PUBLISHABLE_KEY } from './supabase-config'
+
 export type SupabaseSession = {
   access_token: string
   refresh_token: string
@@ -6,8 +8,8 @@ export type SupabaseSession = {
 }
 
 const SESSION_KEY = 'xc-admin-session-v1'
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const anonKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined
+const url = (import.meta.env.VITE_SUPABASE_URL || SUPABASE_PROJECT_URL) as string | undefined
+const anonKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE_PUBLISHABLE_KEY) as string | undefined
 
 export function isSupabaseConfigured() { return Boolean(url && anonKey) }
 

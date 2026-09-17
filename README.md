@@ -24,6 +24,6 @@ Esta primeira versão funciona sem credenciais externas e mantém rascunhos e su
 
 ## Painel administrativo
 
-O painel privado está disponível em `/admin` e usa a autenticação do Supabase. Configure as variáveis documentadas em `.env.example` e aplique a migration em `supabase/migrations` para liberar leitura somente a usuários com papel `admin`, `trainer` ou `treinador`.
+O painel privado está disponível em `/admin` e usa a autenticação do projeto Supabase `jkcggjxxmpxbwnxgwrrq`. A configuração pública está em `src/lib/supabase-config.ts`; variáveis de ambiente continuam podendo sobrescrevê-la. Aplique a migration em `supabase/migrations` para liberar leitura somente a usuários com papel `admin`, `trainer` ou `treinador`.
 
 O painel consulta as tabelas existentes `profiles` (com fallback para `clients`), `assessments`, `assessment_answers` e `assessment_photos`. As fotos continuam privadas e são exibidas por URLs assinadas com validade de 15 minutos.
