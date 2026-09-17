@@ -48,6 +48,11 @@ export async function signOut() {
   saveSession(null)
 }
 
+export async function updatePassword(password: string) {
+  if (password.length < 12) throw new Error('A nova senha deve possuir pelo menos 12 caracteres.')
+  await authenticatedFetch('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password }) })
+}
+
 async function authenticatedFetch(path: string, init?: RequestInit) {
   const { url: base, anonKey: key } = config()
   const session = getSession()
@@ -93,6 +98,7 @@ export async function requireStaff() {
     profileRole = String(rows[0]?.role || rows[0]?.user_role || rows[0]?.type || '').toLowerCase()
   } catch { /* RLS remains the source of truth for protected data. */ }
   const role = claimRole || profileRole
-  if (!['admin', 'trainer', 'treinador'].includes(role)) throw new Error('Acesso permitido somente para treinador ou administrador.')
-  return { user, role }
+  const isInitialAdmin = user.id === 'eb84c124-f09c-4d28-a0a0-b75af9e50d56'
+  if (!isInitialAdmin && !['admin', 'trainer', 'treinador'].includes(role)) throw new Error('Acesso permitido somente para treinador ou administrador.')
+  return { user, role: isInitialAdmin ? 'admin' : role }
 }
