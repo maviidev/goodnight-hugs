@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, CalendarDays, ClipboardCheck, ClipboardList, Clock3, Search, UserRoundX } from 'lucide-react'
+import { ArrowRight, CalendarDays, ClipboardCheck, ClipboardList, Clock3, KeyRound, Search, UserRoundX } from 'lucide-react'
 import { loadAssessments } from './data'
 import type { AssessmentStatus, AssessmentSummary } from './types'
 
@@ -16,7 +16,7 @@ export function Dashboard() {
   useEffect(() => { loadAssessments().then(setItems).catch(message => setError(message instanceof Error ? message.message : 'Falha ao carregar avaliações.')).finally(() => setLoading(false)) }, [])
   const visible = useMemo(() => items.filter(item => `${item.name} ${item.email}`.toLowerCase().includes(search.toLowerCase()) && (filter === 'all' || item.status === filter)).sort((a, b) => order === 'name' ? a.name.localeCompare(b.name) : order === 'oldest' ? Date.parse(a.createdAt) - Date.parse(b.createdAt) : Date.parse(b.createdAt) - Date.parse(a.createdAt)), [items, search, filter, order])
   const count = (status: AssessmentStatus) => items.filter(item => item.status === status).length
-  return <><div className="admin-title"><div><span className="admin-kicker">XCONSULTORIA</span><h1>Painel de Avaliações</h1><p>Acompanhe o preenchimento e consulte as fichas dos alunos.</p></div></div>
+  return <><div className="admin-title"><div><span className="admin-kicker">XCONSULTORIA</span><h1>Painel de Avaliações</h1><p>Acompanhe o preenchimento e consulte as fichas dos alunos.</p></div><a className="password-shortcut" href="/admin/alterar-senha"><KeyRound size={17} /> Alterar minha senha</a></div>
     <section className="metric-grid"><Metric icon={<ClipboardList />} label="Total de avaliações" value={items.length} tone="cyan" /><Metric icon={<ClipboardCheck />} label="Concluídas" value={count('completed')} tone="green" /><Metric icon={<Clock3 />} label="Em andamento" value={count('in_progress')} tone="pink" /><Metric icon={<UserRoundX />} label="Não iniciadas" value={count('not_started')} tone="purple" /></section>
     <section className="admin-panel"><div className="panel-heading"><div><h2>Alunos e avaliações</h2><p>{visible.length} registro(s) encontrado(s)</p></div><div className="admin-search"><Search size={18} /><input placeholder="Buscar aluno..." value={search} onChange={event => setSearch(event.target.value)} /></div></div>
       <div className="toolbar"><div className="filter-tabs">{([['all','Todos'],['completed','Concluídos'],['in_progress','Em andamento'],['not_started','Não iniciados']] as const).map(([value,label]) => <button className={filter === value ? 'active' : ''} onClick={() => setFilter(value)} key={value}>{label}</button>)}</div><select value={order} onChange={event => setOrder(event.target.value as typeof order)}><option value="recent">Mais recentes</option><option value="oldest">Mais antigos</option><option value="name">Nome A–Z</option></select></div>

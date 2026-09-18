@@ -29,7 +29,7 @@ function summary(row: Row, profiles: Row[]): AssessmentSummary {
 
 async function safeSelect(table: string) {
   try { return await selectRows(table, 'select=*') } catch (error) {
-    if (table === 'profiles') return selectRows('clients', 'select=*')
+    if (table === 'profiles') return selectRows('clients', 'select=*').catch(() => [])
     throw error
   }
 }

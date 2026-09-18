@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Logo, Navigation, PhotoStep, Progress, StepForm, Success, Welcome } from './components'
 import { steps } from './questions'
 import { loadDraft, saveDraft, saveSubmission } from './storage'
+import { submitAssessment } from './lib/assessment-submit'
 import type { AnswerValue, PhotoKey, Photos } from './types'
 import './evaluation.css'
 
@@ -16,6 +17,7 @@ export default function App() {
   const [invalidIds, setInvalidIds] = useState<string[]>([])
   const [photoInvalid, setPhotoInvalid] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const totalSteps = steps.length + 1
   const isPhotoStep = currentStep === steps.length
 
@@ -35,7 +37,7 @@ export default function App() {
   function setPhoto(key: PhotoKey, file: File | null) {
     setPhotos(previous => {
       if (previous[key]?.preview) URL.revokeObjectURL(previous[key]!.preview)
-      return { ...previous, [key]: file ? { name: file.name, preview: URL.createObjectURL(file) } : null }
+      return { ...previous, [key]: file ? { name: file.name, preview: URL.createObjectURL(file), file } : null }
     })
     setPhotoInvalid(false)
   }
@@ -60,10 +62,14 @@ export default function App() {
   async function next() {
     if (!validateStep()) return
     if (!isPhotoStep) { setCurrentStep(step => step + 1); setInvalidIds([]); return }
-    setBusy(true)
-    await new Promise(resolve => setTimeout(resolve, 700))
-    saveSubmission(answers, Object.fromEntries(Object.entries(photos).map(([key, photo]) => [key, photo?.name || ''])))
-    setBusy(false); setScreen('success')
+    setBusy(true); setSubmitError('')
+    try {
+      await submitAssessment(answers, photos)
+      saveSubmission(answers, Object.fromEntries(Object.entries(photos).map(([key, photo]) => [key, photo?.name || ''])))
+      setScreen('success')
+    } catch (message) {
+      setSubmitError(message instanceof Error ? message.message : 'Não foi possível enviar sua avaliação. Tente novamente.')
+    } finally { setBusy(false) }
   }
 
   function back() {
@@ -79,5 +85,5 @@ export default function App() {
   if (screen === 'success') return <Success name={String(answers.name || '')} onRestart={restart} />
 
   const activeStep = steps[currentStep]
-  return <div className="xc-app"><div className="app-shell"><header className="topbar"><div className="brand"><Logo /><span>XC CONSULTORIA</span></div><span className="secure"><span /> Avaliação segura</span></header><Progress current={currentStep} total={totalSteps} /><main className="form-area">{isPhotoStep ? <PhotoStep photos={photos} onPhoto={setPhoto} invalid={photoInvalid} /> : activeStep ? <StepForm step={activeStep} answers={answers} invalidIds={invalidIds} onAnswer={answer} /> : null}<Navigation onBack={back} onNext={next} first={currentStep === 0} last={isPhotoStep} busy={busy} /></main><footer className="form-footer">Seus dados são confidenciais e protegidos · XC Consultoria</footer></div></div>
+  return <div className="xc-app"><div className="app-shell"><header className="topbar"><div className="brand"><Logo /><span>XC CONSULTORIA</span></div><span className="secure"><span /> Avaliação segura</span></header><Progress current={currentStep} total={totalSteps} /><main className="form-area">{isPhotoStep ? <PhotoStep photos={photos} onPhoto={setPhoto} invalid={photoInvalid} /> : activeStep ? <StepForm step={activeStep} answers={answers} invalidIds={invalidIds} onAnswer={answer} /> : null}{submitError && <div className="submission-error" role="alert">{submitError}</div>}<Navigation onBack={back} onNext={next} first={currentStep === 0} last={isPhotoStep} busy={busy} /></main><footer className="form-footer">Seus dados são confidenciais e protegidos · XC Consultoria</footer></div></div>
 }

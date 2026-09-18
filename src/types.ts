@@ -20,4 +20,4 @@ export type Step = {
 }
 
 export type PhotoKey = 'front' | 'side' | 'back'
-export type Photos = Record<PhotoKey, { name: string; preview: string } | null>
+export type Photos = Record<PhotoKey, { name: string; preview: string; file: File } | null>
