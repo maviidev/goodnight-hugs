@@ -53,18 +53,40 @@ export async function updatePassword(password: string) {
   await authenticatedFetch('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password }) })
 }
 
+async function refreshSession(current: SupabaseSession) {
+  const { url: base, anonKey: key } = config()
+  if (!current.refresh_token) throw new Error('Sua sessão expirou. Entre novamente para alterar a senha.')
+  const response = await fetch(`${base}/auth/v1/token?grant_type=refresh_token`, {
+    method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: current.refresh_token }),
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) { saveSession(null); throw new Error(payload.error_description || payload.message || payload.msg || 'Sua sessão expirou. Entre novamente.') }
+  const session: SupabaseSession = { ...payload, expires_at: Math.floor(Date.now() / 1000) + payload.expires_in }
+  saveSession(session)
+  return session
+}
+
 async function authenticatedFetch(path: string, init?: RequestInit) {
   const { url: base, anonKey: key } = config()
-  const session = getSession()
+  let session = getSession()
   if (!session) throw new Error('Sessão não encontrada. Entre novamente.')
-  const response = await fetch(`${base}${path}`, {
+
+  if (session.expires_at && session.expires_at <= Math.floor(Date.now() / 1000) + 30) session = await refreshSession(session)
+
+  const request = (active: SupabaseSession) => fetch(`${base}${path}`, {
     ...init,
-    headers: { apikey: key, Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json', ...init?.headers },
+    headers: { apikey: key, Authorization: `Bearer ${active.access_token}`, 'Content-Type': 'application/json', ...init?.headers },
   })
-  if (response.status === 401) saveSession(null)
+
+  let response = await request(session)
+  if (response.status === 401) {
+    session = await refreshSession(session)
+    response = await request(session)
+  }
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}))
-    throw new Error(payload.message || payload.msg || `Falha na consulta (${response.status}).`)
+    throw new Error(payload.error_description || payload.message || payload.msg || `Falha na consulta (${response.status}).`)
   }
   return response
 }
