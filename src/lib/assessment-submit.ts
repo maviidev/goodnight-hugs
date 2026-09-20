@@ -19,7 +19,7 @@ export async function submitAssessment(answers: Record<string, AnswerValue>, pho
   const assessmentId = crypto.randomUUID()
   const allowedKeys = new Set(steps.flatMap(step => step.questions.map(question => question.id)))
   const safeAnswers = Object.fromEntries(Object.entries(answers).filter(([key]) => allowedKeys.has(key)))
-  await rpc('submit_assessment', {
+  await rpc('submit_assessment_v2', {
     p_id: assessmentId, p_name: String(answers.name || ''), p_email: String(answers.email || ''),
     p_weight: Number(String(answers.currentWeight || '').replace(',', '.')) || null, p_answers: safeAnswers,
   })
