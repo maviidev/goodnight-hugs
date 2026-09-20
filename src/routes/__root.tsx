@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { SITE_CONFIG } from "../site-config";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -77,11 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "XC Consultoria — Avaliação Física" },
-      { name: "description", content: "Avaliação física e nutricional da XC Consultoria" },
-      { name: "author", content: "XC Consultoria" },
-      { property: "og:title", content: "XC Consultoria — Avaliação Física" },
-      { property: "og:description", content: "Avaliação física e nutricional da XC Consultoria" },
+      { title: SITE_CONFIG.title },
+      { name: "application-name", content: SITE_CONFIG.name },
+      { name: "description", content: SITE_CONFIG.description },
+      { name: "author", content: SITE_CONFIG.author },
+      { property: "og:site_name", content: SITE_CONFIG.name },
+      { property: "og:title", content: SITE_CONFIG.title },
+      { property: "og:description", content: SITE_CONFIG.description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -101,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
