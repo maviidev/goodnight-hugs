@@ -77,14 +77,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "XC Consultoria — Avaliação Física" },
+      { name: "description", content: "Avaliação física e nutricional da XC Consultoria" },
+      { name: "author", content: "XC Consultoria" },
+      { property: "og:title", content: "XC Consultoria — Avaliação Física" },
+      { property: "og:description", content: "Avaliação física e nutricional da XC Consultoria" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -116,6 +115,19 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    const removeBadge = () => {
+      document.querySelectorAll<HTMLElement>('#lovable-badge, [data-lovable-badge]').forEach((element) => element.remove());
+      document.querySelectorAll<HTMLAnchorElement>('a[href*="lovable.dev"]').forEach((element) => {
+        if (/made\s+with\s+lovable/i.test(element.textContent || '')) element.remove();
+      });
+    };
+    removeBadge();
+    const observer = new MutationObserver(removeBadge);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

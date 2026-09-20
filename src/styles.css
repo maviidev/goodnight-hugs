@@ -142,3 +142,14 @@
     color: var(--color-foreground);
   }
 }
+
+
+/* Hosting may inject this promotional badge after the application mounts. */
+#lovable-badge,
+[data-lovable-badge],
+a[href*="lovable.dev"]:has(> *),
+a[href*="lovable.dev"][aria-label*="Lovable" i] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
