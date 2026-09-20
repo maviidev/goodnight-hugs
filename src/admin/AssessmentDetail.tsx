@@ -111,7 +111,7 @@ function Attention({ answers }: { answers: AnswerView[] }) { return <section cla
 
 function Answers({ detail }: { detail: Detail }) {
   const mapped = new Set<string>(responseSections.flatMap(([, keys]) => [...keys]))
-  const sections: [string, AnswerView[]][] = responseSections.map(([title, keys]) => [title, keys.map(key => detail.answers.find(answer => answer.key === key)).filter((answer): answer is AnswerView => Boolean(answer))])
+  const sections: [string, AnswerView[]][] = responseSections.map(([title, keys]) => [title, keys.map(key => detail.answers.find(answer => answer.key === key)).filter((answer): answer is AnswerView => Boolean(answer))] as [string, AnswerView[]])
   const additional = detail.answers.filter(answer => !mapped.has(answer.key))
   if (additional.length) sections.push(['INFORMAÇÕES ADICIONAIS', additional])
   return <section className="answer-sheet"><div className="section-title"><span>Questionário completo</span><h2>Respostas da avaliação</h2></div>{sections.map(([title, answers]) => answers.length ? <div className="answer-category" key={title}><h3>{title}</h3>{answers.map(answer => <div className="answer-item" key={`${answer.key}-${answer.label}`}><strong>{answer.label}</strong><p>{answer.value}</p></div>)}</div> : null)}</section>
