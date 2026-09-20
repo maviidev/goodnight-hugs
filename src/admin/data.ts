@@ -1,4 +1,4 @@
-import { createSignedPhotoUrl, selectRows } from '../lib/supabase-rest'
+import { callAuthenticatedRpc, createSignedPhotoUrl, selectRows } from '../lib/supabase-rest'
 import { questionCategory, questionLabels } from './question-map'
 import type { AnswerView, AssessmentDetail, AssessmentStatus, AssessmentSummary, PhotoView, Row } from './types'
 
@@ -39,10 +39,16 @@ export async function loadAssessments() {
   return assessments.map(row => summary(row, profiles))
 }
 
+async function loadAssessmentAnswers(id: string) {
+  const direct = await selectRows('assessment_answers', `select=*&assessment_id=eq.${encodeURIComponent(id)}`)
+  if (direct.length) return direct
+  return callAuthenticatedRpc<Row[]>('get_assessment_answers_admin', { p_assessment_id: id })
+}
+
 export async function loadAssessmentDetail(id: string): Promise<AssessmentDetail> {
   const [assessmentRows, profiles, answerRows, photoRows, allAssessments] = await Promise.all([
     selectRows('assessments', `select=*&id=eq.${encodeURIComponent(id)}&limit=1`), safeSelect('profiles'),
-    selectRows('assessment_answers', `select=*&assessment_id=eq.${encodeURIComponent(id)}`),
+    loadAssessmentAnswers(id),
     selectRows('assessment_photos', `select=*&assessment_id=eq.${encodeURIComponent(id)}`).catch(() => []),
     loadAssessments().catch(() => []),
   ])

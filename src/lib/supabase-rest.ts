@@ -73,6 +73,13 @@ export async function getCurrentUser() {
   return authenticatedFetch('/auth/v1/user').then(response => response.json()) as Promise<SupabaseSession['user']>
 }
 
+export async function callAuthenticatedRpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const response = await authenticatedFetch(`/rest/v1/rpc/${encodeURIComponent(name)}`, {
+    method: 'POST', body: JSON.stringify(body), headers: { Accept: 'application/json' },
+  })
+  return response.json() as Promise<T>
+}
+
 export async function selectRows(table: string, query = 'select=*') {
   const response = await authenticatedFetch(`/rest/v1/${table}?${query}`, { headers: { Accept: 'application/json' } })
   return response.json() as Promise<Record<string, unknown>[]>
