@@ -43,7 +43,8 @@ export async function loadAssessmentDetail(id: string): Promise<AssessmentDetail
   const [assessmentRows, profiles, answerRows, photoRows, allAssessments] = await Promise.all([
     selectRows('assessments', `select=*&id=eq.${encodeURIComponent(id)}&limit=1`), safeSelect('profiles'),
     selectRows('assessment_answers', `select=*&assessment_id=eq.${encodeURIComponent(id)}`),
-    selectRows('assessment_photos', `select=*&assessment_id=eq.${encodeURIComponent(id)}`), loadAssessments(),
+    selectRows('assessment_photos', `select=*&assessment_id=eq.${encodeURIComponent(id)}`).catch(() => []),
+    loadAssessments().catch(() => []),
   ])
   const row = assessmentRows[0]
   if (!row) throw new Error('Avaliação não encontrada ou sem permissão de acesso.')
@@ -61,7 +62,8 @@ export async function loadAssessmentDetail(id: string): Promise<AssessmentDetail
     return { id: text(item.id || index), position, label: position === 'front' ? 'FRENTE' : position === 'side' ? 'LADO' : 'COSTAS', bucket: text(pick(item, 'bucket', 'bucket_id')) || 'assessment-photos', path: text(pick(item, 'storage_path', 'path', 'file_path', 'object_path')) }
   })
   const email = base.email.trim().toLowerCase()
-  const history = allAssessments.filter(item => item.id === base.id || (base.clientId ? item.clientId === base.clientId : Boolean(email) && item.email.trim().toLowerCase() === email)).sort((a, b) => Date.parse(b.completedAt || b.createdAt) - Date.parse(a.completedAt || a.createdAt))
+  const assessmentPool = allAssessments.some(item => item.id === base.id) ? allAssessments : [base, ...allAssessments]
+  const history = assessmentPool.filter(item => item.id === base.id || (base.clientId ? item.clientId === base.clientId : Boolean(email) && item.email.trim().toLowerCase() === email)).sort((a, b) => Date.parse(b.completedAt || b.createdAt) - Date.parse(a.completedAt || a.createdAt))
   const historyIds = history.map(item => item.id).filter(Boolean)
   if (historyIds.length) {
     const rows = await selectRows('assessment_answers', `select=assessment_id,question_key,answer&assessment_id=in.(${historyIds.join(',')})`).catch(() => [])

@@ -34,11 +34,12 @@ export function AssessmentDetailPage({ assessmentId }: { assessmentId: string })
   useEffect(() => {
     let cancelled = false
     setLoading(true); setError('')
-    loadAssessmentDetail(assessmentId).then(async initial => {
+    loadAssessmentDetail(assessmentId).then(initial => {
+      if (cancelled) return
+      setStudent(initial); setDetail(initial); setLoading(false)
       const latestId = initial.history[0]?.id
-      const latest = latestId && latestId !== initial.id ? await loadAssessmentDetail(latestId) : initial
-      if (!cancelled) { setStudent(latest); setDetail(latest) }
-    }).catch(message => { if (!cancelled) setError(message instanceof Error ? message.message : 'Não foi possível carregar os dados deste aluno.') }).finally(() => { if (!cancelled) setLoading(false) })
+      if (latestId && latestId !== initial.id) loadAssessmentDetail(latestId).then(latest => { if (!cancelled) { setStudent(latest); setDetail(latest) } }).catch(() => undefined)
+    }).catch(message => { if (!cancelled) { setError(message instanceof Error ? message.message : 'Não foi possível carregar os dados deste aluno.'); setLoading(false) } })
     return () => { cancelled = true }
   }, [assessmentId, reloadKey])
 
