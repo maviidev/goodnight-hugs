@@ -10,6 +10,7 @@ export type AssessmentSummary = {
   completedAt: string
   status: AssessmentStatus
   weight: string
+  bodyFat?: string
   raw: Row
 }
 

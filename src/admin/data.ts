@@ -54,17 +54,32 @@ export async function loadAssessmentDetail(id: string): Promise<AssessmentDetail
     return { key, label: questionLabels[key] || text(pick(item, 'question', 'label')) || 'Informação adicional', value: text(pick(item, 'answer', 'value', 'response')), category: questionCategory(key) }
   }).filter(item => item.value)
   if (!base.weight) base.weight = answers.find(item => item.key === 'currentWeight')?.value || ''
+  base.bodyFat = answers.find(item => item.key === 'bodyFat')?.value || ''
   const photos: PhotoView[] = photoRows.map((item, index) => {
     const rawPosition = text(pick(item, 'position', 'photo_type', 'type', 'view')).toLowerCase()
     const position = rawPosition.includes('side') || rawPosition.includes('lado') ? 'side' : rawPosition.includes('back') || rawPosition.includes('cost') ? 'back' : index === 1 ? 'side' : index === 2 ? 'back' : 'front'
     return { id: text(item.id || index), position, label: position === 'front' ? 'FRENTE' : position === 'side' ? 'LADO' : 'COSTAS', bucket: text(pick(item, 'bucket', 'bucket_id')) || 'assessment-photos', path: text(pick(item, 'storage_path', 'path', 'file_path', 'object_path')) }
   })
-  await Promise.all(photos.map(async photo => {
-    if (!photo.path) return
+  const email = base.email.trim().toLowerCase()
+  const history = allAssessments.filter(item => base.clientId ? item.clientId === base.clientId : Boolean(email) && item.email.trim().toLowerCase() === email).sort((a, b) => Date.parse(b.completedAt || b.createdAt) - Date.parse(a.completedAt || a.createdAt))
+  const historyIds = history.map(item => item.id).filter(Boolean)
+  if (historyIds.length) {
+    const rows = await selectRows('assessment_answers', `select=assessment_id,question_key,answer&assessment_id=in.(${historyIds.join(',')})`).catch(() => [])
+    history.forEach(item => {
+      const related = rows.filter(answer => text(answer.assessment_id) === item.id)
+      if (!item.weight) item.weight = text(related.find(answer => text(answer.question_key) === 'currentWeight')?.answer)
+      item.bodyFat = text(related.find(answer => text(answer.question_key) === 'bodyFat')?.answer)
+    })
+  }
+  return { ...base, profile, answers, photos, history }
+}
+
+export async function loadPhotoUrls(photos: PhotoView[]) {
+  return Promise.all(photos.map(async photo => {
+    if (!photo.path || photo.url) return photo
     const signedUrl = await createSignedPhotoUrl(photo.bucket, photo.path).catch(() => undefined)
-    if (signedUrl) photo.url = signedUrl
+    return signedUrl ? { ...photo, url: signedUrl } : photo
   }))
-  return { ...base, profile, answers, photos, history: allAssessments.filter(item => item.clientId && item.clientId === base.clientId).sort((a, b) => Date.parse(b.completedAt || b.createdAt) - Date.parse(a.completedAt || a.createdAt)) }
 }
 
 export const valueFrom = (detail: AssessmentDetail, ...keys: string[]) => detail.answers.find(answer => keys.includes(answer.key))?.value || text(pick(detail.profile, ...keys) || pick(detail.raw, ...keys))
