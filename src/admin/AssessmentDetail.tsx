@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock3, Dumbbell, Flag, Ruler, Scale, Target, X } from 'lucide-react'
 import { loadAssessmentDetail, loadPhotoUrls, valueFrom } from './data'
 import type { AnswerView, AssessmentDetail as Detail, AssessmentStatus, PhotoView } from './types'
@@ -26,7 +26,7 @@ export function AssessmentDetailPage({ assessmentId }: { assessmentId: string })
   const [tab, setTab] = useState<Tab>('overview')
   const [loading, setLoading] = useState(true)
   const [photosLoading, setPhotosLoading] = useState(false)
-  const [photoAssessmentLoaded, setPhotoAssessmentLoaded] = useState('')
+  const photoAssessmentLoaded = useRef('')
   const [error, setError] = useState('')
   const [activePhoto, setActivePhoto] = useState<number | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
@@ -44,18 +44,18 @@ export function AssessmentDetailPage({ assessmentId }: { assessmentId: string })
   }, [assessmentId, reloadKey])
 
   useEffect(() => {
-    if (tab !== 'photos' || !detail || photoAssessmentLoaded === detail.id || detail.photos.every(photo => photo.url || !photo.path)) return
+    if (tab !== 'photos' || !detail || photoAssessmentLoaded.current === detail.id || detail.photos.every(photo => photo.url || !photo.path)) return
     let cancelled = false
-    setPhotosLoading(true); setPhotoAssessmentLoaded(detail.id)
+    setPhotosLoading(true); photoAssessmentLoaded.current = detail.id
     loadPhotoUrls(detail.photos).then(photos => { if (!cancelled) setDetail(current => current ? { ...current, photos } : current) }).finally(() => { if (!cancelled) setPhotosLoading(false) })
     return () => { cancelled = true }
-  }, [tab, detail, photoAssessmentLoaded])
+  }, [tab, detail])
 
   const warnings = useMemo(() => detail?.answers.filter(answer => warningKeys.includes(answer.key) && isRelevant(answer.value)) || [], [detail])
 
   async function selectAssessment(id: string) {
     if (detail?.id === id) return
-    setLoading(true); setError(''); setActivePhoto(null); setPhotoAssessmentLoaded('')
+    setLoading(true); setError(''); setActivePhoto(null); photoAssessmentLoaded.current = ''
     try { setDetail(await loadAssessmentDetail(id)) }
     catch (message) { setError(message instanceof Error ? message.message : 'Não foi possível carregar os dados deste aluno.') }
     finally { setLoading(false) }
